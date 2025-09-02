@@ -42,7 +42,6 @@ export default function MonthView({ date, weekStartsOn = 0, innerRef }: MonthVie
               ].join(" ")}
             >
               <span className="text-xs sm:text-sm font-medium mt-1">{day.getDate()}</span>
-              {/* Other content can go here */}
             </button>
 
           );

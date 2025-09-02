@@ -9,6 +9,8 @@ const LOAD_MORE_OFFSET = 300;
 export default function InfiniteCalendar() {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
+  const hasScrolledToCurrent = useRef(false);
+
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
     for (let i = -INITIAL_BUFFER; i <= INITIAL_BUFFER; i++) {
@@ -19,10 +21,9 @@ export default function InfiniteCalendar() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || hasScrolledToCurrent.current) return;
 
     const scrollToCurrent = () => {
       const currentMonthDiv = monthRefs.current.get(months[INITIAL_BUFFER].toISOString());
@@ -31,6 +32,7 @@ export default function InfiniteCalendar() {
           top: currentMonthDiv.offsetTop - 170,
           behavior: "auto",
         });
+        hasScrolledToCurrent.current = true; 
       }
     };
 
@@ -39,10 +41,11 @@ export default function InfiniteCalendar() {
         scrollToCurrent();
         clearInterval(interval);
       }
-    }, 20); // check every 20ms until container is scrollable
+    }, 20);
 
     return () => clearInterval(interval);
   }, [months]);
+
 
 
 
