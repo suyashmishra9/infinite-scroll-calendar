@@ -11,6 +11,7 @@ export default function InfiniteCalendar() {
   const [currentMonth, setCurrentMonth] = useState(today);
   const hasScrolledToCurrent = useRef(false);
 
+  // Months buffer for infinite scrolling
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
     for (let i = -INITIAL_BUFFER; i <= INITIAL_BUFFER; i++) {
@@ -21,6 +22,8 @@ export default function InfiniteCalendar() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // Scroll to the current month on initial render
   useEffect(() => {
     const container = containerRef.current;
     if (!container || hasScrolledToCurrent.current) return;
@@ -32,7 +35,7 @@ export default function InfiniteCalendar() {
           top: currentMonthDiv.offsetTop - 170,
           behavior: "auto",
         });
-        hasScrolledToCurrent.current = true; 
+        hasScrolledToCurrent.current = true;
       }
     };
 
@@ -46,21 +49,22 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
-
-
-
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
 
     const scrollTop = container.scrollTop;
+    const scrollBottom = scrollTop + container.clientHeight;
+    const scrollMiddle = scrollTop + container.clientHeight / 2;
+
+    // --- Active month detection (for black/gray coloring & header) ---
     let closestMonth: Date | null = null;
     let minDistance = Infinity;
 
     monthRefs.current.forEach((el, key) => {
-      const offsetTop = el.offsetTop;
-      const distance = scrollTop - offsetTop;
-      if (distance >= -el.offsetHeight / 2 && distance < minDistance) {
+      const monthMiddle = el.offsetTop + el.offsetHeight / 2;
+      const distance = Math.abs(scrollMiddle - monthMiddle);
+      if (distance < minDistance) {
         minDistance = distance;
         closestMonth = new Date(key);
       }
@@ -70,6 +74,7 @@ export default function InfiniteCalendar() {
       setCurrentMonth(closestMonth);
     }
 
+    // --- Prepend months if near top ---
     if (scrollTop < LOAD_MORE_OFFSET) {
       const firstMonth = months[0];
       const newMonths: Date[] = [];
@@ -84,7 +89,8 @@ export default function InfiniteCalendar() {
       });
     }
 
-    if (scrollTop + container.clientHeight > container.scrollHeight - LOAD_MORE_OFFSET) {
+    // --- Append months if near bottom ---
+    if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
       const lastMonth = months[months.length - 1];
       const newMonths: Date[] = [];
       for (let i = 1; i <= INITIAL_BUFFER; i++) {
@@ -94,9 +100,12 @@ export default function InfiniteCalendar() {
     }
   };
 
+
   return (
     <>
+      {/* Top sticky header */}
       <CalendarHeader date={currentMonth} />
+
       <div
         ref={containerRef}
         className="overflow-y-auto h-screen"
@@ -110,7 +119,8 @@ export default function InfiniteCalendar() {
               if (el) monthRefs.current.set(month.toISOString(), el);
             }}
           >
-            <MonthView date={month} />
+            {/* Pass the activeMonth prop for dynamic coloring */}
+            <MonthView date={month} activeMonth={currentMonth} />
           </div>
         ))}
       </div>

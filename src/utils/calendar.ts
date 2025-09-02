@@ -23,21 +23,42 @@ export function endOfCalendarGrid(date: Date, weekStartsOn: WeekStart = 0): Date
   return endOfWeek(endOfMonth(date), { weekStartsOn });
 }
 
-export function buildMonthMatrix(date: Date, weekStartsOn: WeekStart = 0): Date[][] {
-  const start = startOfCalendarGrid(date, weekStartsOn);
-  const weeks: Date[][] = [];
-  let current = start;
+export function buildMonthMatrix(date: Date, weekStartsOn: WeekStart = 0): (Date | null)[][] {
+  const startOfMonthDate = startOfMonth(date);
+  const endOfMonthDate = endOfMonth(date);
 
-  for (let row = 0; row < 6; row++) {
-    const week: Date[] = [];
-    for (let col = 0; col < 7; col++) {
-      week.push(current);
-      current = addDays(current, 1);
-    }
-    weeks.push(week);
+  // Determine padding for the first week
+  const startWeekday = startOfMonthDate.getDay(); // 0=Sun, 1=Mon
+  const padding = weekStartsOn === 0 ? startWeekday : (startWeekday === 0 ? 6 : startWeekday - 1);
+
+  const weeks: (Date | null)[][] = [];
+  let currentWeek: (Date | null)[] = [];
+
+  // Add padding nulls at start of first week
+  for (let i = 0; i < padding; i++) {
+    currentWeek.push(null);
   }
+
+  // Fill dates of the month
+  let current = startOfMonthDate;
+  while (current <= endOfMonthDate) {
+    currentWeek.push(current);
+    if (currentWeek.length === 7) {
+      weeks.push(currentWeek);
+      currentWeek = [];
+    }
+    current = addDays(current, 1);
+  }
+
+  // Fill remaining nulls in last week
+  if (currentWeek.length > 0) {
+    while (currentWeek.length < 7) currentWeek.push(null);
+    weeks.push(currentWeek);
+  }
+
   return weeks;
 }
+
 
 
 export function isSameDay(a: Date, b: Date): boolean {
@@ -66,3 +87,9 @@ export function getWeekdayLabels(weekStartsOn: WeekStart = 0): string[] {
     : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return base;
 }
+
+// Add this function to utils/Calendar.ts
+export function formatMonthShort(date: Date): string {
+  return format(date, "MMM"); // Returns "Jan", "Feb", "Mar", etc.
+}
+
