@@ -21,12 +21,30 @@ export default function InfiniteCalendar() {
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   useEffect(() => {
-    const currentIndex = INITIAL_BUFFER;
-    const monthDiv = containerRef.current?.children[currentIndex] as HTMLElement;
-    if (monthDiv) {
-      monthDiv.scrollIntoView({ block: "start" });
-    }
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
+
+    const scrollToCurrent = () => {
+      const currentMonthDiv = monthRefs.current.get(months[INITIAL_BUFFER].toISOString());
+      if (currentMonthDiv) {
+        container.scrollTo({
+          top: currentMonthDiv.offsetTop - 170,
+          behavior: "auto",
+        });
+      }
+    };
+
+    const interval = setInterval(() => {
+      if (container.scrollHeight > container.clientHeight) {
+        scrollToCurrent();
+        clearInterval(interval);
+      }
+    }, 20); // check every 20ms until container is scrollable
+
+    return () => clearInterval(interval);
+  }, [months]);
+
+
 
   const handleScroll = () => {
     const container = containerRef.current;
