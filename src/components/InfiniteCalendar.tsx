@@ -11,7 +11,6 @@ export default function InfiniteCalendar() {
   const [currentMonth, setCurrentMonth] = useState(today);
   const hasScrolledToCurrent = useRef(false);
 
-  // Months buffer for infinite scrolling
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
     for (let i = -INITIAL_BUFFER; i <= INITIAL_BUFFER; i++) {
@@ -23,7 +22,6 @@ export default function InfiniteCalendar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // Scroll to the current month on initial render
   useEffect(() => {
     const container = containerRef.current;
     if (!container || hasScrolledToCurrent.current) return;
@@ -49,55 +47,32 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
+  let scrollTimeout: NodeJS.Timeout;
+
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
 
     const scrollTop = container.scrollTop;
     const scrollBottom = scrollTop + container.clientHeight;
-    const scrollMiddle = scrollTop + container.clientHeight / 2;
 
-    // --- Active month detection (for black/gray coloring & header) ---
-    let closestMonth: Date | null = null;
-    let minDistance = Infinity;
+    if (scrollTop < LOAD_MORE_OFFSET) {
+      const firstMonth = months[0];
+      const oldHeight = container.scrollHeight;
 
-    monthRefs.current.forEach((el, key) => {
-      const monthMiddle = el.offsetTop + el.offsetHeight / 2;
-      const distance = Math.abs(scrollMiddle - monthMiddle);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestMonth = new Date(key);
+      const newMonths: Date[] = [];
+      for (let i = 1; i <= INITIAL_BUFFER; i++) {
+        newMonths.unshift(subMonths(firstMonth, i));
       }
-    });
+      setMonths(prev => [...newMonths, ...prev]);
 
-    if (closestMonth && closestMonth.getTime() !== currentMonth.getTime()) {
-      setCurrentMonth(closestMonth);
+      setTimeout(() => {
+        const newHeight = container.scrollHeight;
+        const diff = newHeight - oldHeight;
+        container.scrollTop = scrollTop + diff;
+      });
     }
 
-    // --- Prepend months if near top ---
-if (scrollTop < LOAD_MORE_OFFSET) {
-  const firstMonth = months[0];
-
-  // Capture old scroll height
-  const oldScrollHeight = container.scrollHeight;
-
-  const newMonths: Date[] = [];
-  for (let i = 1; i <= INITIAL_BUFFER; i++) {
-    newMonths.unshift(subMonths(firstMonth, i));
-  }
-
-  setMonths(prev => [...newMonths, ...prev]);
-
-  // After re-render, adjust scrollTop based on height difference
-  setTimeout(() => {
-    const newScrollHeight = container.scrollHeight;
-    const heightDiff = newScrollHeight - oldScrollHeight;
-    container.scrollTop = scrollTop + heightDiff;
-  });
-}
-
-
-    // --- Append months if near bottom ---
     if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
       const lastMonth = months[months.length - 1];
       const newMonths: Date[] = [];
@@ -106,12 +81,32 @@ if (scrollTop < LOAD_MORE_OFFSET) {
       }
       setMonths(prev => [...prev, ...newMonths]);
     }
+
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      const scrollMiddle = container.scrollTop + container.clientHeight / 2;
+
+      let closestMonth: Date | null = null;
+      let minDistance = Infinity;
+
+      monthRefs.current.forEach((el, key) => {
+        const monthMiddle = el.offsetTop + el.offsetHeight / 2;
+        const distance = Math.abs(scrollMiddle - monthMiddle);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestMonth = new Date(key);
+        }
+      });
+
+      if (closestMonth && closestMonth.getTime() !== currentMonth.getTime()) {
+        setCurrentMonth(closestMonth);
+      }
+    }, 1);
   };
 
 
   return (
     <>
-      {/* Top sticky header */}
       <CalendarHeader date={currentMonth} />
 
       <div
@@ -127,7 +122,6 @@ if (scrollTop < LOAD_MORE_OFFSET) {
               if (el) monthRefs.current.set(month.toISOString(), el);
             }}
           >
-            {/* Pass the activeMonth prop for dynamic coloring */}
             <MonthView date={month} activeMonth={currentMonth} />
           </div>
         ))}
