@@ -75,19 +75,27 @@ export default function InfiniteCalendar() {
     }
 
     // --- Prepend months if near top ---
-    if (scrollTop < LOAD_MORE_OFFSET) {
-      const firstMonth = months[0];
-      const newMonths: Date[] = [];
-      for (let i = 1; i <= INITIAL_BUFFER; i++) {
-        newMonths.unshift(subMonths(firstMonth, i));
-      }
-      setMonths(prev => [...newMonths, ...prev]);
+if (scrollTop < LOAD_MORE_OFFSET) {
+  const firstMonth = months[0];
 
-      setTimeout(() => {
-        const newFirst = container.children[INITIAL_BUFFER] as HTMLElement;
-        if (newFirst) container.scrollTop = newFirst.offsetTop;
-      });
-    }
+  // Capture old scroll height
+  const oldScrollHeight = container.scrollHeight;
+
+  const newMonths: Date[] = [];
+  for (let i = 1; i <= INITIAL_BUFFER; i++) {
+    newMonths.unshift(subMonths(firstMonth, i));
+  }
+
+  setMonths(prev => [...newMonths, ...prev]);
+
+  // After re-render, adjust scrollTop based on height difference
+  setTimeout(() => {
+    const newScrollHeight = container.scrollHeight;
+    const heightDiff = newScrollHeight - oldScrollHeight;
+    container.scrollTop = scrollTop + heightDiff;
+  });
+}
+
 
     // --- Append months if near bottom ---
     if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
