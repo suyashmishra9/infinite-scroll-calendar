@@ -7,7 +7,7 @@ import { loadEntries, normalizeEntries } from "../utils/journal";
 import sampleData from "../data/sampleData.json";
 import type { Entry } from "../types";
 
-const INITIAL_BUFFER = 3;
+const INITIAL_BUFFER = 10;
 const LOAD_MORE_OFFSET = 300;
 
 export default function InfiniteCalendar() {
@@ -25,24 +25,19 @@ export default function InfiniteCalendar() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-
-  // State for entries and modal
+  const [loading, setLoading] = useState(true);
   const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
   const [modalDate, setModalDate] = useState<string | null>(null);
 
-  // Load entries from localStorage or sample data
   useEffect(() => {
     let stored = loadEntries();
     if (stored.size === 0) {
-      // Use sample data if localStorage is empty
       stored = normalizeEntries(sampleData as Entry[]);
-      // Save it to localStorage
       localStorage.setItem("journalEntries", JSON.stringify(sampleData));
     }
     setEntriesByDate(stored);
   }, []);
 
-  // Scroll to current month on mount
   useEffect(() => {
     const container = containerRef.current;
     if (!container || hasScrolledToCurrent.current) return;
@@ -68,8 +63,12 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
-  let scrollTimeout: NodeJS.Timeout;
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 200);
+    return () => clearTimeout(timer);
+  }, []);
 
+  let scrollTimeout: NodeJS.Timeout;
   const handleScroll = () => {
     const container = containerRef.current;
     if (!container) return;
@@ -157,6 +156,53 @@ export default function InfiniteCalendar() {
           entriesByDate={entriesByDate}
           onClose={() => setModalDate(null)}
         />
+      )}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-50">
+        <button className="flex flex-col items-center justify-center text-gray-400">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7m-9 2v8m0 0h4m-4 0H5m14 0v-8m0 0l2 2m-2-2h-4" />
+          </svg>
+          <span className="text-xs mt-1">Home</span>
+        </button>
+
+        <button className="flex flex-col items-center justify-center text-gray-400">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
+          </svg>
+          <span className="text-xs mt-1">Search</span>
+        </button>
+
+        <button className="flex flex-col items-center justify-center text-gray-400">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="text-xs mt-1">Add</span>
+        </button>
+
+        <button className="flex flex-col items-center justify-center text-blue-600">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span className="text-xs mt-1">Calendar</span>
+        </button>
+
+        <button className="flex flex-col items-center justify-center text-gray-400">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 21v-2a4 4 0 00-8 0v2m4-4a4 4 0 100-8 4 4 0 000 8z" />
+          </svg>
+          <span className="text-xs mt-1">Login</span>
+        </button>
+      </div>
+
+
+      <button className="fixed bottom-20 right-5 bg-blue-600 text-white w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-blue-700">
+        <span className="text-4xl sm:text-5xl font-light leading-none relative -translate-y-0.7">+</span>
+      </button>
+
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>
+        </div>
       )}
     </>
   );
