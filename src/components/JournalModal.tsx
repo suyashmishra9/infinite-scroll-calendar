@@ -9,34 +9,31 @@ type Props = {
 };
 
 export default function JournalModal({ entriesByDate, initialDate, onClose }: Props) {
-  const sortedDates = Array.from(entriesByDate.keys()).sort();
-  const [currentDateIndex, setCurrentDateIndex] = useState(
-    sortedDates.indexOf(initialDate)
-  );
+  // Flatten all entries into a single array with date info
+  const allEntries = Array.from(entriesByDate.entries())
+    .flatMap(([date, entries]) => entries.map(entry => ({ date, entry })));
 
-  const currentDate = sortedDates[currentDateIndex];
-  const currentEntries = entriesByDate.get(currentDate) || [];
-  const currentEntry = currentEntries[0]; 
+  const initialIndex = allEntries.findIndex(e => e.date === initialDate) || 0;
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  const currentItem = allEntries[currentIndex];
+  if (!currentItem) return null;
 
   const handlers = useSwipeable({
-    onSwipedLeft: () => setCurrentDateIndex(i => Math.max(i - 1, 0)),
-    onSwipedRight: () =>
-      setCurrentDateIndex(i => Math.min(i + 1, sortedDates.length - 1)),
+    onSwipedLeft: () => setCurrentIndex(i => Math.min(i + 1, allEntries.length - 1)),
+    onSwipedRight: () => setCurrentIndex(i => Math.max(i - 1, 0)),
     trackMouse: true,
   });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") setCurrentDateIndex(i => Math.max(i - 1, 0));
-      if (e.key === "ArrowRight")
-        setCurrentDateIndex(i => Math.min(i + 1, sortedDates.length - 1));
+      if (e.key === "ArrowLeft") setCurrentIndex(i => Math.max(i - 1, 0));
+      if (e.key === "ArrowRight") setCurrentIndex(i => Math.min(i + 1, allEntries.length - 1));
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [sortedDates]);
-
-  if (!currentEntry) return null;
+  }, [allEntries]);
 
   return (
     <div
@@ -49,15 +46,16 @@ export default function JournalModal({ entriesByDate, initialDate, onClose }: Pr
         onClick={(e) => e.stopPropagation()}
       >
         <img
-          src={currentEntry.imgUrl || "/fallback.png"}
+          src={currentItem.entry.imgUrl || "/fallback.png"}
           className="w-full h-64 object-cover rounded"
           loading="lazy"
         />
         <div className="mt-2">
-          <p className="font-medium">{currentEntry.description}</p>
-          <p className="text-sm text-gray-500">Rating: {currentEntry.rating}</p>
+          <p className="text-sm text-gray-500">{currentItem.date}</p>
+          <p className="font-medium">{currentItem.entry.description}</p>
+          <p className="text-sm text-gray-500">Rating: {currentItem.entry.rating}</p>
           <div className="flex flex-wrap gap-1 mt-1">
-            {currentEntry.categories.map((c) => (
+            {currentItem.entry.categories.map((c) => (
               <span key={c} className="bg-gray-200 px-2 py-0.5 rounded-full text-xs">
                 {c}
               </span>
