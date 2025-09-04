@@ -194,10 +194,20 @@ export default function InfiniteCalendar() {
         </button>
       </div>
 
-
-      <button className="fixed bottom-20 right-5 bg-blue-600 text-white w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-blue-700">
-        <span className="text-4xl sm:text-5xl font-light leading-none relative -translate-y-0.7">+</span>
+      <button className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
+  hover:scale-110 active:rotate-45 transition-transform duration-200">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-8 h-8 sm:w-10 sm:h-10 text-white"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
       </button>
+
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
