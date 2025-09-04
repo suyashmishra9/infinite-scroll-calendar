@@ -194,7 +194,7 @@ export default function InfiniteCalendar() {
         </button>
       </div>
 
-      {/* <button className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
+      <button className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
   hover:scale-110 active:rotate-45 transition-transform duration-200">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -206,7 +206,7 @@ export default function InfiniteCalendar() {
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-      </button> */}
+      </button>
 
 
       {loading && (
