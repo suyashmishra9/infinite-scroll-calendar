@@ -1,0 +1,48 @@
+import type { Entry } from "../types";
+
+const STORAGE_KEY = "journalEntries";
+
+function getUUID() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+export function parseUsDate(str: string) {
+  const [m, d, y] = str.split("/").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function toYMD(date: Date) {
+  return date.toISOString().split("T")[0];
+}
+
+export function normalizeEntries(entries: Entry[] = []): Map<string, Entry[]> {
+  const byDate = new Map<string, Entry[]>();
+  for (const entry of entries) {
+    const key = toYMD(parseUsDate(entry.date));
+    if (!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key)!.push({ ...entry, id: getUUID() });
+  }
+  return byDate;
+}
+
+export function loadEntries(): Map<string, Entry[]> {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return new Map();
+  try {
+    const entries: Entry[] = JSON.parse(raw);
+    return normalizeEntries(entries);
+  } catch {
+    return new Map();
+  }
+}
+
+export function saveEntries(entries: Entry[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}

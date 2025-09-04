@@ -1,7 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import CalendarHeader from "./CalendarHeader";
 import MonthView from "./MonthView";
+import JournalModal from "./JournalModal";
 import { addMonths, subMonths } from "date-fns";
+import { loadEntries, normalizeEntries } from "../utils/journal";
+import sampleData from "../data/sampleData.json";
+import type { Entry } from "../types";
 
 const INITIAL_BUFFER = 3;
 const LOAD_MORE_OFFSET = 300;
@@ -22,6 +26,23 @@ export default function InfiniteCalendar() {
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  // State for entries and modal
+  const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
+  const [modalDate, setModalDate] = useState<string | null>(null);
+
+  // Load entries from localStorage or sample data
+  useEffect(() => {
+    let stored = loadEntries();
+    if (stored.size === 0) {
+      // Use sample data if localStorage is empty
+      stored = normalizeEntries(sampleData as Entry[]);
+      // Save it to localStorage
+      localStorage.setItem("journalEntries", JSON.stringify(sampleData));
+    }
+    setEntriesByDate(stored);
+  }, []);
+
+  // Scroll to current month on mount
   useEffect(() => {
     const container = containerRef.current;
     if (!container || hasScrolledToCurrent.current) return;
@@ -68,8 +89,7 @@ export default function InfiniteCalendar() {
 
       setTimeout(() => {
         const newHeight = container.scrollHeight;
-        const diff = newHeight - oldHeight;
-        container.scrollTop = scrollTop + diff;
+        container.scrollTop = scrollTop + (newHeight - oldHeight);
       });
     }
 
@@ -104,7 +124,6 @@ export default function InfiniteCalendar() {
     }, 1);
   };
 
-
   return (
     <>
       <CalendarHeader date={currentMonth} />
@@ -122,10 +141,23 @@ export default function InfiniteCalendar() {
               if (el) monthRefs.current.set(month.toISOString(), el);
             }}
           >
-            <MonthView date={month} activeMonth={currentMonth} />
+            <MonthView
+              date={month}
+              activeMonth={currentMonth}
+              entriesByDate={entriesByDate}
+              setModalOpen={setModalDate}
+            />
           </div>
         ))}
       </div>
+
+      {modalDate && (
+        <JournalModal
+          initialDate={modalDate}
+          entriesByDate={entriesByDate}
+          onClose={() => setModalDate(null)}
+        />
+      )}
     </>
   );
 }
