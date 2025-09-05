@@ -22,15 +22,15 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   const containerRef = useRef<HTMLDivElement>(null);
-// Scroll to initial card instantly on first render
-useEffect(() => {
-  const container = containerRef.current;
-  if (container) {
-    const card = container.children[initialIndex] as HTMLElement;
-    card?.scrollIntoView({ behavior: "auto", inline: "center" });
-  }
-}, [initialIndex]);
 
+  // Scroll to initial card instantly on first render
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      const card = container.children[initialIndex] as HTMLElement;
+      card?.scrollIntoView({ behavior: "auto", inline: "center" });
+    }
+  }, [initialIndex]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -52,6 +52,8 @@ useEffect(() => {
   }, [currentIndex]);
 
   if (!allEntries.length) return null;
+
+  const currentEntry = allEntries[currentIndex];
 
   return (
     <div
@@ -75,7 +77,7 @@ useEffect(() => {
           ref={containerRef}
           className="flex flex-row items-center gap-6 overflow-x-auto py-8 px-4 w-full h-full snap-x snap-mandatory scrollbar-hide"
         >
-          {allEntries.map((item, index) => (
+          {allEntries.map((item) => (
             <div
               key={item.entry.id}
               className="snap-center flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden relative transition-transform duration-300"
@@ -103,16 +105,18 @@ useEffect(() => {
                   ))}
                 </div>
               </div>
-              {/* Delete Button on every card */}
+
               <button
-                onClick={() => onDelete(item.entry.id)}
-                className="absolute bottom-4 right-4 flex items-center gap-1 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                onClick={() => onDelete(currentEntry.entry.id)}
+                className="mt-1 flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
               >
                 <FaTrash /> Delete
               </button>
             </div>
+
           ))}
         </div>
+
       </div>
     </div>
   );
