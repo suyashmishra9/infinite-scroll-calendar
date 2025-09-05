@@ -4,7 +4,6 @@ import InfiniteCalendar from "./components/InfiniteCalendar";
 
 
 export default function App() {
-  // Start with current month; for testing, you can set: new Date(2025, 8, 1)
   const [current] = useState<Date>(new Date());
 
   return (

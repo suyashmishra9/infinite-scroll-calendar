@@ -27,19 +27,16 @@ export function buildMonthMatrix(date: Date, weekStartsOn: WeekStart = 0): (Date
   const startOfMonthDate = startOfMonth(date);
   const endOfMonthDate = endOfMonth(date);
 
-  // Determine padding for the first week
-  const startWeekday = startOfMonthDate.getDay(); // 0=Sun, 1=Mon
+  const startWeekday = startOfMonthDate.getDay(); 
   const padding = weekStartsOn === 0 ? startWeekday : (startWeekday === 0 ? 6 : startWeekday - 1);
 
   const weeks: (Date | null)[][] = [];
   let currentWeek: (Date | null)[] = [];
 
-  // Add padding nulls at start of first week
   for (let i = 0; i < padding; i++) {
     currentWeek.push(null);
   }
 
-  // Fill dates of the month
   let current = startOfMonthDate;
   while (current <= endOfMonthDate) {
     currentWeek.push(current);
@@ -50,7 +47,6 @@ export function buildMonthMatrix(date: Date, weekStartsOn: WeekStart = 0): (Date
     current = addDays(current, 1);
   }
 
-  // Fill remaining nulls in last week
   if (currentWeek.length > 0) {
     while (currentWeek.length < 7) currentWeek.push(null);
     weeks.push(currentWeek);
@@ -88,8 +84,7 @@ export function getWeekdayLabels(weekStartsOn: WeekStart = 0): string[] {
   return base;
 }
 
-// Add this function to utils/Calendar.ts
 export function formatMonthShort(date: Date): string {
-  return format(date, "MMM"); // Returns "Jan", "Feb", "Mar", etc.
+  return format(date, "MMM"); 
 }
 

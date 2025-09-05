@@ -1,12 +1,14 @@
 import { useState } from "react";
+import type { Entry } from "../types";
 import { addEntry } from "../utils/journal";
 
 type CreateEntryModalProps = {
     date: Date;
     onClose: () => void;
+    onAddEntry: (updatedEntries: Map<string, Entry[]>) => void; // new prop
 };
 
-export default function CreateEntryModal({ date, onClose }: CreateEntryModalProps) {
+export default function CreateEntryModal({ date, onClose, onAddEntry }: CreateEntryModalProps) {
     const [imageUrl, setImageUrl] = useState("");
     const [rating, setRating] = useState<number | "">("");
     const [categories, setCategories] = useState("");
@@ -27,7 +29,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
             );
             const data = await res.json();
             setImageUrl(data.data.image.url);
-            console.log(data.data.image.url);
         } catch (err) {
             console.error("Upload failed:", err);
             alert("Image upload failed");
@@ -46,18 +47,20 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
             return;
         }
 
-        const newEntry = {
+        const newEntry: Entry = {
             id: "",
             date: date.toLocaleDateString("en-US"),
             imageUrl,
             rating: Number(rating),
-            categories: categories.split(",").map((c) => c.trim()),
+            categories: categories.split(",").map(c => c.trim()),
             description,
         };
 
-        addEntry(new Map(), newEntry);
+        const updatedMap = addEntry(new Map(), newEntry);
+
+        onAddEntry(updatedMap);
+
         onClose();
-        window.location.reload();
     };
 
     return (
@@ -65,7 +68,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
             <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-lg overflow-y-auto max-h-[90vh]">
                 <h2 className="text-xl font-semibold mb-4">Create Journal Entry</h2>
 
-                {/* Image Upload */}
                 <div className="mb-3">
                     <label className="block mb-1">Upload Image</label>
                     <button
@@ -77,7 +79,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                             input.accept = "image/*";
                             input.onchange = (e: any) => {
                                 const file = e.target.files[0];
-                                if (file) handleFileSelect(file); // auto upload
+                                if (file) handleFileSelect(file);
                             };
                             input.click();
                         }}
@@ -98,7 +100,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     )}
                 </div>
 
-                {/* Rating */}
                 <div className="mb-3">
                     <label className="block mb-1">Rating (1–5, decimals allowed)</label>
                     <input
@@ -112,7 +113,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Categories */}
                 <div className="mb-3">
                     <label className="block mb-1">Categories (comma separated)</label>
                     <input
@@ -123,7 +123,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Date */}
                 <div className="mb-3">
                     <label className="block mb-1">Date</label>
                     <input
@@ -134,7 +133,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Description */}
                 <div className="mb-3">
                     <label className="block mb-1">Description</label>
                     <textarea
@@ -144,7 +142,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Actions */}
                 <div className="flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 border rounded-lg">
                         Cancel

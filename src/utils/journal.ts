@@ -55,7 +55,7 @@ export function saveEntries(entries: Entry[]) {
 
 export function addEntry(entriesByDate: Map<string, Entry[]>, newEntry: Entry) {
   const key = toYMD(parseUsDate(newEntry.date));
-  const updated = loadEntries(); // load from localStorage
+  const updated = loadEntries(); 
   if (!updated.has(key)) updated.set(key, []);
   updated.get(key)!.push({ ...newEntry, id: getUUID() });
   saveEntries(Array.from(updated.values()).flat());

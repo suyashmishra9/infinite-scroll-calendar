@@ -3,8 +3,7 @@ import CalendarHeader from "./CalendarHeader";
 import MonthView from "./MonthView";
 import JournalModal from "./JournalModal";
 import { addMonths, subMonths } from "date-fns";
-import { loadEntries, normalizeEntries, toYMD } from "../utils/journal";
-import sampleData from "../data/sampleData.json";
+import { loadEntries, toYMD, addEntry, saveEntries } from "../utils/journal";
 import type { Entry } from "../types";
 import CreateEntryModal from "./CreateEntryModal";
 
@@ -17,6 +16,11 @@ export default function InfiniteCalendar() {
   const hasScrolledToCurrent = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [modalDate, setModalDate] = useState<string | null>(null);
+  const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
@@ -26,20 +30,25 @@ export default function InfiniteCalendar() {
     return arr;
   });
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
-  const [modalDate, setModalDate] = useState<string | null>(null);
-
   useEffect(() => {
-    let stored = loadEntries();
-    if (stored.size === 0) {
-      stored = normalizeEntries(sampleData as Entry[]);
-      localStorage.setItem("journalEntries", JSON.stringify(sampleData));
-    }
+    const stored = loadEntries();
     setEntriesByDate(stored);
   }, []);
+
+  const deleteEntry = (entryId: string) => {
+    const updated = new Map(entriesByDate);
+    for (const [date, entries] of updated) {
+      const index = entries.findIndex(e => e.id === entryId);
+      if (index !== -1) {
+        entries.splice(index, 1);
+        if (entries.length === 0) updated.delete(date);
+        break;
+      }
+    }
+    setEntriesByDate(updated);
+    saveEntries(Array.from(updated.values()).flat());
+    setModalDate(null);
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -66,11 +75,6 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 200);
-    return () => clearTimeout(timer);
-  }, []);
-
   let scrollTimeout: NodeJS.Timeout;
   const handleScroll = () => {
     const container = containerRef.current;
@@ -84,9 +88,7 @@ export default function InfiniteCalendar() {
       const oldHeight = container.scrollHeight;
 
       const newMonths: Date[] = [];
-      for (let i = 1; i <= INITIAL_BUFFER; i++) {
-        newMonths.unshift(subMonths(firstMonth, i));
-      }
+      for (let i = 1; i <= INITIAL_BUFFER; i++) newMonths.unshift(subMonths(firstMonth, i));
       setMonths(prev => [...newMonths, ...prev]);
 
       setTimeout(() => {
@@ -98,9 +100,7 @@ export default function InfiniteCalendar() {
     if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
       const lastMonth = months[months.length - 1];
       const newMonths: Date[] = [];
-      for (let i = 1; i <= INITIAL_BUFFER; i++) {
-        newMonths.push(addMonths(lastMonth, i));
-      }
+      for (let i = 1; i <= INITIAL_BUFFER; i++) newMonths.push(addMonths(lastMonth, i));
       setMonths(prev => [...prev, ...newMonths]);
     }
 
@@ -127,29 +127,19 @@ export default function InfiniteCalendar() {
   };
 
   const handleDaySelect = (date: string) => {
-    if (selectedDate === date) {
-      setSelectedDate(null); 
-    } else {
-      setSelectedDate(date);
-    }
+    setSelectedDate(selectedDate === date ? null : date);
   };
 
   return (
     <>
       <CalendarHeader date={currentMonth} />
 
-      <div
-        ref={containerRef}
-        className="overflow-y-auto h-screen"
-        onScroll={handleScroll}
-      >
-        {months.map((month) => (
+      <div ref={containerRef} className="overflow-y-auto h-screen" onScroll={handleScroll}>
+        {months.map(month => (
           <div
             key={month.toISOString()}
             data-month={month.toISOString()}
-            ref={el => {
-              if (el) monthRefs.current.set(month.toISOString(), el);
-            }}
+            ref={el => { if (el) monthRefs.current.set(month.toISOString(), el); }}
           >
             <MonthView
               date={month}
@@ -168,6 +158,7 @@ export default function InfiniteCalendar() {
           initialDate={modalDate}
           entriesByDate={entriesByDate}
           onClose={() => setModalDate(null)}
+          onDelete={deleteEntry} 
         />
       )}
 
@@ -240,14 +231,10 @@ export default function InfiniteCalendar() {
         <CreateEntryModal
           date={new Date(selectedDate)}
           onClose={() => setIsModalOpen(false)}
+          onAddEntry={(updatedEntries) => setEntriesByDate(updatedEntries)}
         />
       )}
 
-      {loading && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>
-        </div>
-      )}
     </>
   );
 }

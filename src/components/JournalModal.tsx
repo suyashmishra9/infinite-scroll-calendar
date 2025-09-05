@@ -6,9 +6,10 @@ type Props = {
   entriesByDate: Map<string, Entry[]>;
   initialDate: string;
   onClose: () => void;
+  onDelete: (entryId: string) => void; 
 };
 
-export default function JournalModal({ entriesByDate, initialDate, onClose }: Props) {
+export default function JournalModal({ entriesByDate, initialDate, onClose, onDelete }: Props) {
   const allEntries = Array.from(entriesByDate.entries())
     .flatMap(([date, entries]) => entries.map(entry => ({ date, entry })));
 
@@ -61,6 +62,13 @@ export default function JournalModal({ entriesByDate, initialDate, onClose }: Pr
             ))}
           </div>
         </div>
+
+        <button
+          onClick={() => onDelete(currentItem.entry.id)}
+          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
