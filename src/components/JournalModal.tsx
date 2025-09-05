@@ -10,13 +10,12 @@ type Props = {
 };
 
 export default function JournalModal({ entriesByDate, initialDate, onClose, onDelete }: Props) {
-  const allEntries = useMemo(
-    () =>
-      Array.from(entriesByDate.entries()).flatMap(([date, entries]) =>
-        entries.map((entry) => ({ date, entry }))
-      ),
-    [entriesByDate]
-  );
+  // 1. Flatten and sort entries by date ascending
+  const allEntries = useMemo(() => {
+    return Array.from(entriesByDate.entries())
+      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+      .flatMap(([date, entries]) => entries.map((entry) => ({ date, entry })));
+  }, [entriesByDate]);
 
   const initialIndex = allEntries.findIndex((e) => e.date === initialDate) || 0;
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -53,7 +52,13 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
 
   if (!allEntries.length) return null;
 
-  const currentEntry = allEntries[currentIndex];
+  const handleDelete = (id: string) => {
+    onDelete(id);
+    // After deletion, adjust index
+    if (currentIndex >= allEntries.length - 1) {
+      setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    }
+  };
 
   return (
     <div
@@ -72,6 +77,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           <FaTimes />
         </button>
 
+        {/* Left Arrow (desktop only) */}
         {currentIndex > 0 && (
           <button
             onClick={() => setCurrentIndex(currentIndex - 1)}
@@ -81,6 +87,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           </button>
         )}
 
+        {/* Right Arrow (desktop only) */}
         {currentIndex < allEntries.length - 1 && (
           <button
             onClick={() => setCurrentIndex(currentIndex + 1)}
@@ -95,7 +102,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           ref={containerRef}
           className="flex flex-row items-center gap-6 overflow-x-auto py-8 px-4 w-full h-full snap-x snap-mandatory scrollbar-hide"
         >
-          {allEntries.map((item) => (
+          {allEntries.map((item, idx) => (
             <div
               key={item.entry.id}
               className="snap-center flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden relative transition-transform duration-300"
@@ -124,8 +131,9 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
                 </div>
               </div>
 
+              {/* Delete button deletes THIS entry */}
               <button
-                onClick={() => onDelete(item.entry.id)}
+                onClick={() => handleDelete(item.entry.id)}
                 className="mt-1 flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition mx-auto mb-4"
               >
                 <FaTrash /> Delete

@@ -155,7 +155,7 @@ export default function InfiniteCalendar() {
       if (closestMonth && closestMonth.getTime() !== currentMonth.getTime()) {
         setCurrentMonth(closestMonth);
       }
-    }, 50);
+    }, 0);
   };
 
   const handleDaySelect = (date: string) => {
