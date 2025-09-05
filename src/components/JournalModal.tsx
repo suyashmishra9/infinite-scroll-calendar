@@ -46,7 +46,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose }: Pr
         onClick={(e) => e.stopPropagation()}
       >
         <img
-          src={currentItem.entry.imgUrl || "/fallback.png"}
+          src={currentItem.entry.imageUrl || "/fallback.png"}
           className="w-full h-64 object-cover rounded"
           loading="lazy"
         />

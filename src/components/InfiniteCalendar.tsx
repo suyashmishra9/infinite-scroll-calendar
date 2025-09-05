@@ -6,6 +6,7 @@ import { addMonths, subMonths } from "date-fns";
 import { loadEntries, normalizeEntries } from "../utils/journal";
 import sampleData from "../data/sampleData.json";
 import type { Entry } from "../types";
+import CreateEntryModal from "./CreateEntryModal";
 
 const INITIAL_BUFFER = 3;
 const LOAD_MORE_OFFSET = 300;
@@ -14,6 +15,8 @@ export default function InfiniteCalendar() {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
   const hasScrolledToCurrent = useRef(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
@@ -203,12 +206,21 @@ export default function InfiniteCalendar() {
           viewBox="0 0 24 24"
           stroke="currentColor"
           strokeWidth={2}
+          onClick={() => {
+            setSelectedDate(new Date());
+            setIsModalOpen(true);
+          }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
       </button>
 
-
+      {isModalOpen && (
+        <CreateEntryModal
+          date={selectedDate}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>

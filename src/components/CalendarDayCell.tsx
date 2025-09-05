@@ -15,7 +15,7 @@ export default function CalendarDayCell({ date, entries, onOpen }: Props) {
       {entries.slice(0, maxThumbs).map((entry) => (
         <img
           key={entry.id}
-          src={entry.imgUrl || "/fallback.png"}
+          src={entry.imageUrl || "/fallback.png"}
           className="w-6 h-6 rounded-sm object-cover inline-block mr-0.5"
         />
       ))}

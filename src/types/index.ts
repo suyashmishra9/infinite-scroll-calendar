@@ -1,6 +1,6 @@
 export type Entry = {
   id: string;           
-  imgUrl: string;       
+  imageUrl: string;       
   rating: number;       
   categories: string[]; 
   date: string;         
