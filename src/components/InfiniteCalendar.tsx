@@ -13,7 +13,8 @@ import MonthYearPickerModal from "../components/MonthYearPickerModal"
 
 
 
-const INITIAL_BUFFER = 200;
+const INITIAL_BUFFER = 3
+;
 const LOAD_MORE_OFFSET = 300;
 
 export default function InfiniteCalendar() {
