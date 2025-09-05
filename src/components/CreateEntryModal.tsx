@@ -27,7 +27,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
             );
             const data = await res.json();
             setImageUrl(data.data.image.url);
-            console.log(data.data.image.url)
+            console.log(data.data.image.url);
         } catch (err) {
             console.error("Upload failed:", err);
             alert("Image upload failed");
@@ -65,11 +65,12 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
             <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-lg overflow-y-auto max-h-[90vh]">
                 <h2 className="text-xl font-semibold mb-4">Create Journal Entry</h2>
 
+                {/* Image Upload */}
                 <div className="mb-3">
                     <label className="block mb-1">Upload Image</label>
                     <button
                         type="button"
-                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg"
+                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2"
                         onClick={() => {
                             const input = document.createElement("input");
                             input.type = "file";
@@ -82,7 +83,10 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                         }}
                         disabled={uploading}
                     >
-                        {uploading ? "Uploading..." : "Upload"}
+                        {uploading && (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                        <span>{uploading ? "Uploading" : "Upload"}</span>
                     </button>
 
                     {imageUrl && (
@@ -94,6 +98,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     )}
                 </div>
 
+                {/* Rating */}
                 <div className="mb-3">
                     <label className="block mb-1">Rating (1–5, decimals allowed)</label>
                     <input
@@ -107,6 +112,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
+                {/* Categories */}
                 <div className="mb-3">
                     <label className="block mb-1">Categories (comma separated)</label>
                     <input
@@ -117,6 +123,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
+                {/* Date */}
                 <div className="mb-3">
                     <label className="block mb-1">Date</label>
                     <input
@@ -127,6 +134,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
+                {/* Description */}
                 <div className="mb-3">
                     <label className="block mb-1">Description</label>
                     <textarea
@@ -136,6 +144,7 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
+                {/* Actions */}
                 <div className="flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 border rounded-lg">
                         Cancel
