@@ -65,7 +65,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
             <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-lg overflow-y-auto max-h-[90vh]">
                 <h2 className="text-xl font-semibold mb-4">Create Journal Entry</h2>
 
-                {/* Image Upload */}
                 <div className="mb-3">
                     <label className="block mb-1">Upload Image</label>
                     <button
@@ -95,7 +94,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     )}
                 </div>
 
-                {/* Rating */}
                 <div className="mb-3">
                     <label className="block mb-1">Rating (1–5, decimals allowed)</label>
                     <input
@@ -109,7 +107,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Categories */}
                 <div className="mb-3">
                     <label className="block mb-1">Categories (comma separated)</label>
                     <input
@@ -120,7 +117,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Date */}
                 <div className="mb-3">
                     <label className="block mb-1">Date</label>
                     <input
@@ -131,7 +127,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Description */}
                 <div className="mb-3">
                     <label className="block mb-1">Description</label>
                     <textarea
@@ -141,7 +136,6 @@ export default function CreateEntryModal({ date, onClose }: CreateEntryModalProp
                     />
                 </div>
 
-                {/* Actions */}
                 <div className="flex justify-end gap-3">
                     <button onClick={onClose} className="px-4 py-2 border rounded-lg">
                         Cancel

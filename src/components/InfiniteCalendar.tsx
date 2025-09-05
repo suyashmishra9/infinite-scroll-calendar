@@ -32,7 +32,6 @@ export default function InfiniteCalendar() {
   const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
   const [modalDate, setModalDate] = useState<string | null>(null);
 
-  // Load entries from localStorage or sample data
   useEffect(() => {
     let stored = loadEntries();
     if (stored.size === 0) {
@@ -42,7 +41,6 @@ export default function InfiniteCalendar() {
     setEntriesByDate(stored);
   }, []);
 
-  // Scroll to current month initially
   useEffect(() => {
     const container = containerRef.current;
     if (!container || hasScrolledToCurrent.current) return;
@@ -68,13 +66,11 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
-  // Loading spinner delay
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 200);
     return () => clearTimeout(timer);
   }, []);
 
-  // Infinite scroll logic
   let scrollTimeout: NodeJS.Timeout;
   const handleScroll = () => {
     const container = containerRef.current;
@@ -83,7 +79,6 @@ export default function InfiniteCalendar() {
     const scrollTop = container.scrollTop;
     const scrollBottom = scrollTop + container.clientHeight;
 
-    // Prepend months
     if (scrollTop < LOAD_MORE_OFFSET) {
       const firstMonth = months[0];
       const oldHeight = container.scrollHeight;
@@ -100,7 +95,6 @@ export default function InfiniteCalendar() {
       });
     }
 
-    // Append months
     if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
       const lastMonth = months[months.length - 1];
       const newMonths: Date[] = [];
@@ -110,7 +104,6 @@ export default function InfiniteCalendar() {
       setMonths(prev => [...prev, ...newMonths]);
     }
 
-    // Update current month in viewport
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       const scrollMiddle = container.scrollTop + container.clientHeight / 2;
@@ -133,10 +126,9 @@ export default function InfiniteCalendar() {
     }, 50);
   };
 
-  // Handle day selection (toggle)
   const handleDaySelect = (date: string) => {
     if (selectedDate === date) {
-      setSelectedDate(null); // unselect if same day clicked
+      setSelectedDate(null); 
     } else {
       setSelectedDate(date);
     }
@@ -179,7 +171,6 @@ export default function InfiniteCalendar() {
         />
       )}
 
-      {/* Bottom Navbar */}
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-50">
         <button className="flex flex-col items-center justify-center text-gray-400">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +186,6 @@ export default function InfiniteCalendar() {
           <span className="text-xs mt-1">Search</span>
         </button>
 
-        {/* Plus Button */}
         <button
           className="flex flex-col items-center justify-center text-gray-400"
           onClick={() => {
@@ -225,7 +215,6 @@ export default function InfiniteCalendar() {
         </button>
       </div>
 
-      {/* Floating Plus Button */}
       <button
         className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
           hover:scale-110 active:rotate-45 transition-transform duration-200"

@@ -9,7 +9,6 @@ type Props = {
 };
 
 export default function JournalModal({ entriesByDate, initialDate, onClose }: Props) {
-  // Flatten all entries into a single array with date info
   const allEntries = Array.from(entriesByDate.entries())
     .flatMap(([date, entries]) => entries.map(entry => ({ date, entry })));
 
