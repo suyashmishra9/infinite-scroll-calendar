@@ -125,7 +125,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
               </div>
 
               <button
-                onClick={() => onDelete(currentEntry.entry.id)}
+                onClick={() => onDelete(item.entry.id)}
                 className="mt-1 flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition mx-auto mb-4"
               >
                 <FaTrash /> Delete
