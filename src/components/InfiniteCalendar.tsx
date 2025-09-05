@@ -101,8 +101,24 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
-  let scrollTimeout: NodeJS.Timeout;
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const rafRef = useRef<number>();
+  const lastScrollTimeRef = useRef<number>(0);
+  
   const handleScroll = () => {
+    const now = Date.now();
+    const timeSinceLastScroll = now - lastScrollTimeRef.current;
+    
+    if (timeSinceLastScroll < 16) {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      rafRef.current = requestAnimationFrame(() => handleScroll());
+      return;
+    }
+    
+    lastScrollTimeRef.current = now;
+    
     const container = containerRef.current;
     if (!container) return;
 
@@ -117,7 +133,7 @@ export default function InfiniteCalendar() {
       for (let i = 1; i <= INITIAL_BUFFER; i++) newMonths.unshift(subMonths(firstMonth, i));
       setMonths(prev => [...newMonths, ...prev]);
 
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const newHeight = container.scrollHeight;
         container.scrollTop = scrollTop + (newHeight - oldHeight);
       });
@@ -130,8 +146,8 @@ export default function InfiniteCalendar() {
       setMonths(prev => [...prev, ...newMonths]);
     }
 
-    if (scrollTimeout) clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
       const scrollMiddle = container.scrollTop + container.clientHeight / 2;
       let closestMonth: Date | null = null;
       let minDistance = Infinity;
@@ -148,7 +164,7 @@ export default function InfiniteCalendar() {
       if (closestMonth && closestMonth.getTime() !== currentMonth.getTime()) {
         setCurrentMonth(closestMonth);
       }
-    }, 0);
+    }, 100); 
   };
 
   const handleDaySelect = (date: string) => {
@@ -207,27 +223,41 @@ export default function InfiniteCalendar() {
     }
   }, [months, scrollingToTarget]);
 
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, []);
+
   return (
     <>
       <CalendarHeader date={currentMonth} />
 
-      <div ref={containerRef} className="overflow-y-auto h-screen" onScroll={handleScroll}>
-        {months.map(month => (
-          <div
-            key={month.toISOString()}
-            data-month={month.toISOString()}
-            ref={el => { if (el) monthRefs.current.set(month.toISOString(), el); }}
-          >
-            <MonthView
-              date={month}
-              activeMonth={currentMonth}
-              entriesByDate={entriesByDate}
-              setModalOpen={setModalDate}
-              selectedDate={selectedDate}
-              setSelectedDate={handleDaySelect}
-            />
-          </div>
-        ))}
+      <div ref={containerRef} className="overflow-y-auto h-screen calendar-container" onScroll={handleScroll}>
+        {months.map(month => {
+          const monthKey = month.toISOString();
+          return (
+            <div
+              key={monthKey}
+              data-month={monthKey}
+              ref={el => { if (el) monthRefs.current.set(monthKey, el); }}
+            >
+              <MonthView
+                date={month}
+                activeMonth={currentMonth}
+                entriesByDate={entriesByDate}
+                setModalOpen={setModalDate}
+                selectedDate={selectedDate}
+                setSelectedDate={handleDaySelect}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {modalDate && (

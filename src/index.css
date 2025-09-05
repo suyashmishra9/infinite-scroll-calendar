@@ -1,1 +1,44 @@
 @import "tailwindcss";
+
+.calendar-container {
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+.calendar-month {
+  contain: layout style paint;
+  transform: translateZ(0);
+}
+
+.calendar-day-cell {
+  contain: layout style paint;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.calendar-image {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
