@@ -8,11 +8,12 @@ import type { Entry } from "../types";
 import CreateEntryModal from "./CreateEntryModal";
 import sampleData from "../data/sampleData.json";
 import { ArchiveBoxIcon } from "@heroicons/react/24/solid";
+import MonthYearPickerModal from "../components/MonthYearPickerModal"
 
 
 
 
-const INITIAL_BUFFER = 3;
+const INITIAL_BUFFER = 200;
 const LOAD_MORE_OFFSET = 300;
 
 export default function InfiniteCalendar() {
@@ -25,6 +26,7 @@ export default function InfiniteCalendar() {
   const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
   const [showSampleButton, setShowSampleButton] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -160,6 +162,31 @@ export default function InfiniteCalendar() {
     setSelectedDate(selectedDate === date ? null : date);
   };
 
+  const scrollToMonthYear = (year: number, month: number) => {
+    const targetDate = new Date(year, month, 1);
+    const container = containerRef.current;
+
+    // Find the closest month element
+    let closestEl: HTMLDivElement | null = null;
+    let minDiff = Infinity;
+
+    monthRefs.current.forEach((el, key) => {
+      const date = new Date(key);
+      const diff = Math.abs(date.getTime() - targetDate.getTime());
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestEl = el;
+      }
+    });
+
+    if (closestEl && container) {
+      container.scrollTo({
+        top: closestEl.offsetTop - 170,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <>
       <CalendarHeader date={currentMonth} />
@@ -200,7 +227,7 @@ export default function InfiniteCalendar() {
           <span className="text-xs mt-1">Home</span>
         </button>
 
-        <button className="flex flex-col items-center justify-center text-gray-400">
+        <button className="flex flex-col items-center justify-center text-gray-400" onClick={() => setIsSearchOpen(true)}>
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1110.5 3a7.5 7.5 0 016.15 13.65z" />
           </svg>
@@ -279,6 +306,14 @@ export default function InfiniteCalendar() {
           onAddEntry={(updatedEntries) => setEntriesByDate(updatedEntries)}
         />
       )}
+
+
+      <MonthYearPickerModal
+        isOpen={isSearchOpen}
+        initialDate={currentMonth}
+        onClose={() => setIsSearchOpen(false)}
+        onSelect={scrollToMonthYear}
+      />
 
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
