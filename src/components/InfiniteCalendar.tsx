@@ -24,6 +24,7 @@ export default function InfiniteCalendar() {
   const [modalDate, setModalDate] = useState<string | null>(null);
   const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
   const [showSampleButton, setShowSampleButton] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -35,6 +36,14 @@ export default function InfiniteCalendar() {
     }
     return arr;
   });
+
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 500); // 500ms delay
+    return () => clearTimeout(timer);
+  }, []);
+
+
 
   useEffect(() => {
     const stored = loadEntries();
@@ -271,6 +280,11 @@ export default function InfiniteCalendar() {
         />
       )}
 
+      {loading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>
+        </div>
+      )}
     </>
   );
 }
