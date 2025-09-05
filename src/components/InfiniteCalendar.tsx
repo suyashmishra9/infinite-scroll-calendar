@@ -3,9 +3,14 @@ import CalendarHeader from "./CalendarHeader";
 import MonthView from "./MonthView";
 import JournalModal from "./JournalModal";
 import { addMonths, subMonths } from "date-fns";
-import { loadEntries, toYMD, addEntry, saveEntries } from "../utils/journal";
+import { loadEntries, toYMD, addEntry, saveEntries, normalizeEntries } from "../utils/journal";
 import type { Entry } from "../types";
 import CreateEntryModal from "./CreateEntryModal";
+import sampleData from "../data/sampleData.json";
+import { ArchiveBoxIcon } from "@heroicons/react/24/solid";
+
+
+
 
 const INITIAL_BUFFER = 3;
 const LOAD_MORE_OFFSET = 300;
@@ -18,6 +23,7 @@ export default function InfiniteCalendar() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [modalDate, setModalDate] = useState<string | null>(null);
   const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
+  const [showSampleButton, setShowSampleButton] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -33,7 +39,22 @@ export default function InfiniteCalendar() {
   useEffect(() => {
     const stored = loadEntries();
     setEntriesByDate(stored);
+
+    const totalEntries = Array.from(stored.values()).flat().length;
+    setShowSampleButton(totalEntries === 0 || totalEntries > 1);
   }, []);
+
+  const checkSampleButton = (entriesMap: Map<string, Entry[]>) => {
+    const totalEntries = Array.from(entriesMap.values()).flat().length;
+    return totalEntries === 0; // show button only if empty
+  };
+
+  useEffect(() => {
+    const stored = loadEntries();
+    setEntriesByDate(stored);
+    setShowSampleButton(checkSampleButton(stored));
+  }, []);
+
 
   const deleteEntry = (entryId: string) => {
     const updated = new Map(entriesByDate);
@@ -158,7 +179,7 @@ export default function InfiniteCalendar() {
           initialDate={modalDate}
           entriesByDate={entriesByDate}
           onClose={() => setModalDate(null)}
-          onDelete={deleteEntry} 
+          onDelete={deleteEntry}
         />
       )}
 
@@ -205,6 +226,21 @@ export default function InfiniteCalendar() {
           <span className="text-xs mt-1">Login</span>
         </button>
       </div>
+
+      {showSampleButton && (
+        <button
+          className="fixed bottom-36 right-5 bg-gray-600 w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-gray-700 transition-colors"
+          title="Load Sample Data"
+          onClick={() => {
+            const updatedMap = normalizeEntries(sampleData);
+            saveEntries(sampleData);
+            setEntriesByDate(updatedMap);
+            setShowSampleButton(false);
+          }}
+        >
+          <ArchiveBoxIcon className="w-6 h-6 text-white" />
+        </button>
+      )}
 
       <button
         className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
