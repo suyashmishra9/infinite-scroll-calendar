@@ -3,7 +3,7 @@ import CalendarHeader from "./CalendarHeader";
 import MonthView from "./MonthView";
 import JournalModal from "./JournalModal";
 import { addMonths, subMonths } from "date-fns";
-import { loadEntries, normalizeEntries } from "../utils/journal";
+import { loadEntries, normalizeEntries, toYMD } from "../utils/journal";
 import sampleData from "../data/sampleData.json";
 import type { Entry } from "../types";
 import CreateEntryModal from "./CreateEntryModal";
@@ -16,7 +16,7 @@ export default function InfiniteCalendar() {
   const [currentMonth, setCurrentMonth] = useState(today);
   const hasScrolledToCurrent = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
@@ -32,6 +32,7 @@ export default function InfiniteCalendar() {
   const [entriesByDate, setEntriesByDate] = useState<Map<string, Entry[]>>(new Map());
   const [modalDate, setModalDate] = useState<string | null>(null);
 
+  // Load entries from localStorage or sample data
   useEffect(() => {
     let stored = loadEntries();
     if (stored.size === 0) {
@@ -41,6 +42,7 @@ export default function InfiniteCalendar() {
     setEntriesByDate(stored);
   }, []);
 
+  // Scroll to current month initially
   useEffect(() => {
     const container = containerRef.current;
     if (!container || hasScrolledToCurrent.current) return;
@@ -66,11 +68,13 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
+  // Loading spinner delay
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 200);
     return () => clearTimeout(timer);
   }, []);
 
+  // Infinite scroll logic
   let scrollTimeout: NodeJS.Timeout;
   const handleScroll = () => {
     const container = containerRef.current;
@@ -79,6 +83,7 @@ export default function InfiniteCalendar() {
     const scrollTop = container.scrollTop;
     const scrollBottom = scrollTop + container.clientHeight;
 
+    // Prepend months
     if (scrollTop < LOAD_MORE_OFFSET) {
       const firstMonth = months[0];
       const oldHeight = container.scrollHeight;
@@ -95,6 +100,7 @@ export default function InfiniteCalendar() {
       });
     }
 
+    // Append months
     if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
       const lastMonth = months[months.length - 1];
       const newMonths: Date[] = [];
@@ -104,6 +110,7 @@ export default function InfiniteCalendar() {
       setMonths(prev => [...prev, ...newMonths]);
     }
 
+    // Update current month in viewport
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       const scrollMiddle = container.scrollTop + container.clientHeight / 2;
@@ -123,7 +130,16 @@ export default function InfiniteCalendar() {
       if (closestMonth && closestMonth.getTime() !== currentMonth.getTime()) {
         setCurrentMonth(closestMonth);
       }
-    }, 1);
+    }, 50);
+  };
+
+  // Handle day selection (toggle)
+  const handleDaySelect = (date: string) => {
+    if (selectedDate === date) {
+      setSelectedDate(null); // unselect if same day clicked
+    } else {
+      setSelectedDate(date);
+    }
   };
 
   return (
@@ -148,6 +164,8 @@ export default function InfiniteCalendar() {
               activeMonth={currentMonth}
               entriesByDate={entriesByDate}
               setModalOpen={setModalDate}
+              selectedDate={selectedDate}
+              setSelectedDate={handleDaySelect}
             />
           </div>
         ))}
@@ -160,6 +178,8 @@ export default function InfiniteCalendar() {
           onClose={() => setModalDate(null)}
         />
       )}
+
+      {/* Bottom Navbar */}
       <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 flex justify-around items-center h-16 z-50">
         <button className="flex flex-col items-center justify-center text-gray-400">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,7 +195,15 @@ export default function InfiniteCalendar() {
           <span className="text-xs mt-1">Search</span>
         </button>
 
-        <button className="flex flex-col items-center justify-center text-gray-400">
+        {/* Plus Button */}
+        <button
+          className="flex flex-col items-center justify-center text-gray-400"
+          onClick={() => {
+            const dateForModal = selectedDate ? new Date(selectedDate) : new Date();
+            setSelectedDate(toYMD(dateForModal));
+            setIsModalOpen(true);
+          }}
+        >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
           </svg>
@@ -197,8 +225,16 @@ export default function InfiniteCalendar() {
         </button>
       </div>
 
-      <button className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
-  hover:scale-110 active:rotate-45 transition-transform duration-200">
+      {/* Floating Plus Button */}
+      <button
+        className="fixed bottom-20 right-5 bg-blue-600 w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center z-50
+          hover:scale-110 active:rotate-45 transition-transform duration-200"
+        onClick={() => {
+          const dateForModal = selectedDate ? new Date(selectedDate) : new Date();
+          setSelectedDate(toYMD(dateForModal));
+          setIsModalOpen(true);
+        }}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-8 h-8 sm:w-10 sm:h-10 text-white"
@@ -206,21 +242,18 @@ export default function InfiniteCalendar() {
           viewBox="0 0 24 24"
           stroke="currentColor"
           strokeWidth={2}
-          onClick={() => {
-            setSelectedDate(new Date());
-            setIsModalOpen(true);
-          }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
       </button>
 
-      {isModalOpen && (
+      {isModalOpen && selectedDate && (
         <CreateEntryModal
-          date={selectedDate}
+          date={new Date(selectedDate)}
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>

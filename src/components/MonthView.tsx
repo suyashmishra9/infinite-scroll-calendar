@@ -18,6 +18,8 @@ type MonthViewProps = {
 
   entriesByDate: Map<string, Entry[]>; 
   setModalOpen: (date: string) => void; 
+  selectedDate?: string | null;          
+  setSelectedDate?: (date: string) => void; 
 };
 
 export default function MonthView({
@@ -27,19 +29,31 @@ export default function MonthView({
   innerRef,
   entriesByDate,
   setModalOpen,
+  selectedDate,
+  setSelectedDate,
 }: MonthViewProps) {
   const matrix = buildMonthMatrix(date, weekStartsOn);
   const weekdayLabels = getWeekdayLabels(weekStartsOn);
   const today = new Date();
 
+  const handleDayClick = (day: Date) => {
+    const dayKey = toYMD(day);
+    if (setSelectedDate) setSelectedDate(dayKey); 
+    // Open modal only if there are entries for that day
+    const dayEntries = entriesByDate.get(dayKey) || [];
+    if (dayEntries.length > 0) setModalOpen(dayKey);
+  };
+
   return (
     <div ref={innerRef} className="mx-auto max-w-5xl px-2 sm:px-4 py-3 sm:py-6">
+      {/* Weekday Labels */}
       <div className="grid grid-cols-7 text-center text-xs sm:text-sm font-medium text-gray-500 select-none mb-1">
         {weekdayLabels.map((d, idx) => (
           <div key={idx}>{d}</div>
         ))}
       </div>
 
+      {/* Day Cells */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {matrix.flat().map((day, idx) => {
           if (!day) return <div key={idx} />; 
@@ -55,20 +69,33 @@ export default function MonthView({
           const dayKey = toYMD(day);
           const dayEntries = entriesByDate.get(dayKey) || [];
 
+          // Determine if this day is selected
+          const isSelected = selectedDate === dayKey;
+
           return (
             <button
               key={day.toISOString()}
               type="button"
               aria-label={formatAriaLabel(day)}
               className={[
-                "relative w-full h-28 rounded-lg p-2 sm:p-3 flex flex-col items-center",
-                "text-left outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                "relative w-full h-28 rounded-lg p-2 sm:p-3 flex flex-col items-center text-left outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
                 isToday
                   ? "bg-blue-600 text-white focus-visible:ring-blue-600"
+                  : isSelected
+                  ? "bg-blue-300 text-black focus-visible:ring-blue-500"
                   : "bg-white focus-visible:ring-blue-500",
                 "border border-gray-200 hover:border-gray-300",
               ].join(" ")}
-              onClick={() => dayEntries.length > 0 && setModalOpen(dayKey)}
+              onClick={() => {
+                if (isSelected && setSelectedDate) {
+                  setSelectedDate(null); // unselect if same day clicked
+                } else if (setSelectedDate) {
+                  setSelectedDate(dayKey);
+                }
+
+                // Open modal only if there are entries for that day
+                if (dayEntries.length > 0) setModalOpen(dayKey);
+              }}
             >
               <span className={`text-sm sm:text-base font-medium mt-1 ${textColor}`}>
                 {isFirstOfMonth ? `${format(day, "MMM")} ${day.getDate()}` : day.getDate()}
