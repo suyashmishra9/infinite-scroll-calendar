@@ -2,19 +2,15 @@ import { useState, useRef, useEffect } from "react";
 import CalendarHeader from "./CalendarHeader";
 import MonthView from "./MonthView";
 import JournalModal from "./JournalModal";
-import { addMonths, subMonths } from "date-fns";
+import { addMonths, subMonths, differenceInMonths } from "date-fns";
 import { loadEntries, toYMD, addEntry, saveEntries, normalizeEntries } from "../utils/journal";
 import type { Entry } from "../types";
 import CreateEntryModal from "./CreateEntryModal";
 import sampleData from "../data/sampleData.json";
 import { ArchiveBoxIcon } from "@heroicons/react/24/solid";
-import MonthYearPickerModal from "../components/MonthYearPickerModal"
+import MonthYearPickerModal from "../components/MonthYearPickerModal";
 
-
-
-
-const INITIAL_BUFFER = 3
-;
+const INITIAL_BUFFER = 3;
 const LOAD_MORE_OFFSET = 300;
 
 export default function InfiniteCalendar() {
@@ -28,9 +24,11 @@ export default function InfiniteCalendar() {
   const [showSampleButton, setShowSampleButton] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [scrollingToTarget, setScrollingToTarget] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const monthRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const targetScrollDateRef = useRef<Date | null>(null);
 
   const [months, setMonths] = useState<Date[]>(() => {
     const arr: Date[] = [];
@@ -40,25 +38,21 @@ export default function InfiniteCalendar() {
     return arr;
   });
 
-
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 500); // 500ms delay
+    const timer = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
-
-
 
   useEffect(() => {
     const stored = loadEntries();
     setEntriesByDate(stored);
-
     const totalEntries = Array.from(stored.values()).flat().length;
     setShowSampleButton(totalEntries === 0 || totalEntries > 1);
   }, []);
 
   const checkSampleButton = (entriesMap: Map<string, Entry[]>) => {
     const totalEntries = Array.from(entriesMap.values()).flat().length;
-    return totalEntries === 0; // show button only if empty
+    return totalEntries === 0; 
   };
 
   useEffect(() => {
@@ -66,7 +60,6 @@ export default function InfiniteCalendar() {
     setEntriesByDate(stored);
     setShowSampleButton(checkSampleButton(stored));
   }, []);
-
 
   const deleteEntry = (entryId: string) => {
     const updated = new Map(entriesByDate);
@@ -140,7 +133,6 @@ export default function InfiniteCalendar() {
     if (scrollTimeout) clearTimeout(scrollTimeout);
     scrollTimeout = setTimeout(() => {
       const scrollMiddle = container.scrollTop + container.clientHeight / 2;
-
       let closestMonth: Date | null = null;
       let minDistance = Infinity;
 
@@ -165,28 +157,55 @@ export default function InfiniteCalendar() {
 
   const scrollToMonthYear = (year: number, month: number) => {
     const targetDate = new Date(year, month, 1);
-    const container = containerRef.current;
+    targetScrollDateRef.current = targetDate;
+    setScrollingToTarget(true);
 
-    // Find the closest month element
-    let closestEl: HTMLDivElement | null = null;
-    let minDiff = Infinity;
+    const firstMonth = months[0];
+    const lastMonth = months[months.length - 1];
 
-    monthRefs.current.forEach((el, key) => {
-      const date = new Date(key);
-      const diff = Math.abs(date.getTime() - targetDate.getTime());
-      if (diff < minDiff) {
-        minDiff = diff;
-        closestEl = el;
+    let newMonths = [...months];
+    const diffStart = differenceInMonths(firstMonth, targetDate);
+    const diffEnd = differenceInMonths(targetDate, lastMonth);
+
+    if (diffStart > 0) {
+      for (let i = 1; i <= diffStart; i++) {
+        newMonths.unshift(subMonths(firstMonth, i));
       }
-    });
-
-    if (closestEl && container) {
-      container.scrollTo({
-        top: closestEl.offsetTop - 170,
-        behavior: "smooth",
-      });
+    } else if (diffEnd > 0) {
+      for (let i = 1; i <= diffEnd; i++) {
+        newMonths.push(addMonths(lastMonth, i));
+      }
     }
+
+    setMonths(newMonths);
   };
+
+  useEffect(() => {
+    if (scrollingToTarget && targetScrollDateRef.current) {
+      const container = containerRef.current;
+      const targetDate = targetScrollDateRef.current;
+
+      const closestEl = Array.from(monthRefs.current.entries()).reduce<HTMLDivElement | null>(
+        (closest, [key, el]) => {
+          const date = new Date(key);
+          const diff = Math.abs(date.getTime() - targetDate.getTime());
+          const currentDiff = closest ? Math.abs(new Date(closest.dataset.month!).getTime() - targetDate.getTime()) : Infinity;
+          return diff < currentDiff ? el : closest;
+        },
+        null
+      );
+
+      if (closestEl && container) {
+        setTimeout(() => {
+          container.scrollTo({
+            top: closestEl.offsetTop - 170,
+            behavior: "smooth",
+          });
+          setScrollingToTarget(false);
+        }, 50); 
+      }
+    }
+  }, [months, scrollingToTarget]);
 
   return (
     <>
@@ -308,7 +327,6 @@ export default function InfiniteCalendar() {
         />
       )}
 
-
       <MonthYearPickerModal
         isOpen={isSearchOpen}
         initialDate={currentMonth}
@@ -316,7 +334,7 @@ export default function InfiniteCalendar() {
         onSelect={scrollToMonthYear}
       />
 
-      {loading && (
+      {(loading || scrollingToTarget) && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/80 z-50">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 border-solid"></div>
         </div>

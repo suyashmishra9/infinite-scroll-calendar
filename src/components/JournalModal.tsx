@@ -10,7 +10,6 @@ type Props = {
 };
 
 export default function JournalModal({ entriesByDate, initialDate, onClose, onDelete }: Props) {
-  // 1. Flatten and sort entries by date ascending
   const allEntries = useMemo(() => {
     return Array.from(entriesByDate.entries())
       .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
@@ -22,7 +21,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to initial card instantly on first render
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
@@ -31,7 +29,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
     }
   }, [initialIndex]);
 
-  // Keyboard navigation
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft" && currentIndex > 0) setCurrentIndex(currentIndex - 1);
@@ -43,7 +40,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
     return () => window.removeEventListener("keydown", onKey);
   }, [currentIndex, allEntries.length, onClose]);
 
-  // Scroll to current card whenever index changes
   useEffect(() => {
     const container = containerRef.current;
     const card = container?.children[currentIndex] as HTMLElement;
@@ -54,7 +50,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
 
   const handleDelete = (id: string) => {
     onDelete(id);
-    // After deletion, adjust index
     if (currentIndex >= allEntries.length - 1) {
       setCurrentIndex((prev) => Math.max(prev - 1, 0));
     }
@@ -69,7 +64,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
         className="relative w-full max-w-4xl h-full flex flex-col items-center"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-white text-2xl bg-black/30 p-2 rounded-full hover:bg-black/50 transition z-20"
@@ -77,7 +71,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           <FaTimes />
         </button>
 
-        {/* Left Arrow (desktop only) */}
         {currentIndex > 0 && (
           <button
             onClick={() => setCurrentIndex(currentIndex - 1)}
@@ -87,7 +80,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           </button>
         )}
 
-        {/* Right Arrow (desktop only) */}
         {currentIndex < allEntries.length - 1 && (
           <button
             onClick={() => setCurrentIndex(currentIndex + 1)}
@@ -97,7 +89,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           </button>
         )}
 
-        {/* Horizontal Scroll Container */}
         <div
           ref={containerRef}
           className="flex flex-row items-center gap-6 overflow-x-auto py-8 px-4 w-full h-full snap-x snap-mandatory scrollbar-hide"
@@ -130,8 +121,6 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
                   ))}
                 </div>
               </div>
-
-              {/* Delete button deletes THIS entry */}
               <button
                 onClick={() => handleDelete(item.entry.id)}
                 className="mt-1 flex items-center gap-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition mx-auto mb-4"
