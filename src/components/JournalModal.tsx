@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import type { Entry } from "../types";
-import { FaTimes, FaTrash, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import {
+  FaTimes,
+  FaTrash,
+  FaChevronLeft,
+  FaChevronRight,
+  FaStar,
+  FaRegStar
+} from "react-icons/fa";
 
 type Props = {
   entriesByDate: Map<string, Entry[]>;
@@ -53,6 +60,19 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
     if (currentIndex >= allEntries.length - 1) {
       setCurrentIndex((prev) => Math.max(prev - 1, 0));
     }
+  };
+
+  // Render stars based on rating
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(<FaStar key={i} className="text-yellow-400" />);
+      } else {
+        stars.push(<FaRegStar key={i} className="text-gray-300" />);
+      }
+    }
+    return <div className="flex items-center gap-1">{stars}</div>;
   };
 
   return (
@@ -109,7 +129,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
               <div className="p-4">
                 <p className="text-sm text-gray-500">{item.date}</p>
                 <p className="font-medium mt-1">{item.entry.description}</p>
-                <p className="text-sm text-gray-500 mt-1">Rating: {item.entry.rating}</p>
+                {renderStars(item.entry.rating)}
                 <div className="flex flex-wrap gap-1 mt-2">
                   {item.entry.categories.map((c) => (
                     <span
