@@ -104,7 +104,6 @@ export default function InfiniteCalendar() {
 
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const rafRef = useRef<number | undefined>(undefined);
-  const lastScrollTimeRef = useRef<number>(0);
 
   const handleScroll = () => {
     const container = containerRef.current;
