@@ -50,7 +50,7 @@ export function saveEntries(entries: Entry[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-export function addEntry(newEntry: Entry) {
+export function addEntry(_p0: Map<any, any>, newEntry: Entry) {
   const key = toYMD(parseUsDate(newEntry.date));
   const updated = loadEntries(); 
   if (!updated.has(key)) updated.set(key, []);
