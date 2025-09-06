@@ -5,7 +5,7 @@ import {
   isSameDay,
   formatAriaLabel,
   type WeekStart,
-} from "../utils/Calendar";
+} from "../utils/calendar";
 import { format } from "date-fns";
 import CalendarDayCell from "./CalendarDayCell";
 import { toYMD } from "../utils/journal";
@@ -50,7 +50,7 @@ const DayCell = memo(({
     if (!isCurrentMonth) return; 
 
     if (isSelected && setSelectedDate) {
-      setSelectedDate(null); 
+      setSelectedDate(""); 
     } else if (setSelectedDate) {
       setSelectedDate(dayKey); 
     }

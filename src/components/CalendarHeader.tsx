@@ -1,4 +1,4 @@
-import { formatMonthTitle } from "../utils/Calendar";
+import { formatMonthTitle } from "../utils/calendar";
 
 type CalendarHeaderProps = {
   date: Date;

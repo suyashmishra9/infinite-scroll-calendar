@@ -3,15 +3,16 @@ import CalendarHeader from "./CalendarHeader";
 import MonthView from "./MonthView";
 import JournalModal from "./JournalModal";
 import { addMonths, subMonths, differenceInMonths } from "date-fns";
-import { loadEntries, toYMD, addEntry, saveEntries, normalizeEntries } from "../utils/journal";
+import { loadEntries, toYMD, saveEntries, normalizeEntries } from "../utils/journal";
 import type { Entry } from "../types";
 import CreateEntryModal from "./CreateEntryModal";
 import sampleData from "../data/sampleData.json";
+
 import { ArchiveBoxIcon } from "@heroicons/react/24/solid";
 import MonthYearPickerModal from "../components/MonthYearPickerModal";
 
 const INITIAL_BUFFER = 3;
-const LOAD_MORE_OFFSET = 300;
+const LOAD_MORE_OFFSET = 100;
 
 export default function InfiniteCalendar() {
   const today = new Date();
@@ -101,8 +102,8 @@ export default function InfiniteCalendar() {
     return () => clearInterval(interval);
   }, [months]);
 
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
-  const rafRef = useRef<number>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const rafRef = useRef<number | undefined>(undefined);
   const lastScrollTimeRef = useRef<number>(0);
   
   const handleScroll = () => {
@@ -161,7 +162,7 @@ export default function InfiniteCalendar() {
         }
       });
 
-      if (closestMonth && closestMonth.getTime() !== currentMonth.getTime()) {
+      if (closestMonth !== null) {
         setCurrentMonth(closestMonth);
       }
     }, 100); 
@@ -318,8 +319,8 @@ export default function InfiniteCalendar() {
           className="fixed bottom-36 right-5 bg-gray-600 w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-gray-700 transition-colors"
           title="Load Sample Data"
           onClick={() => {
-            const updatedMap = normalizeEntries(sampleData);
-            saveEntries(sampleData);
+            const updatedMap = normalizeEntries(sampleData as any);
+            saveEntries(Array.from(updatedMap.values()).flat());
             setEntriesByDate(updatedMap);
             setShowSampleButton(false);
           }}

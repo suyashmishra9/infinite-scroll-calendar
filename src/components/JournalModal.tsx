@@ -93,7 +93,7 @@ export default function JournalModal({ entriesByDate, initialDate, onClose, onDe
           ref={containerRef}
           className="flex flex-row items-center gap-6 overflow-x-auto py-8 px-4 w-full h-full snap-x snap-mandatory scrollbar-hide"
         >
-          {allEntries.map((item, idx) => (
+          {allEntries.map((item) => (
             <div
               key={item.entry.id}
               className="snap-center flex-shrink-0 w-80 bg-white rounded-xl shadow-lg overflow-hidden relative transition-transform duration-300"
