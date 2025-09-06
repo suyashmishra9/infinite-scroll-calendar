@@ -113,12 +113,10 @@ export default function InfiniteCalendar() {
     const scrollTop = container.scrollTop;
     const scrollBottom = scrollTop + container.clientHeight;
 
-    // PREPEND MONTHS when scrolling up
     if (scrollTop < LOAD_MORE_OFFSET) {
       const firstMonth = months[0];
       const oldHeight = container.scrollHeight;
 
-      // Only prepend if not already prepending
       setMonths(prev => {
         const newMonths: Date[] = [];
         for (let i = INITIAL_BUFFER; i >= 1; i--) {
@@ -127,8 +125,6 @@ export default function InfiniteCalendar() {
         return [...newMonths, ...prev];
       });
 
-      // Adjust scrollTop after DOM update using useLayoutEffect
-      // instead of requestAnimationFrame
       requestAnimationFrame(() => {
         if (containerRef.current) {
           const newHeight = containerRef.current.scrollHeight;
@@ -137,7 +133,6 @@ export default function InfiniteCalendar() {
       });
     }
 
-    // APPEND MONTHS when scrolling down
     if (scrollBottom > container.scrollHeight - LOAD_MORE_OFFSET) {
       const lastMonth = months[months.length - 1];
       setMonths(prev => {
@@ -149,7 +144,6 @@ export default function InfiniteCalendar() {
       });
     }
 
-    // Update current month highlighting (debounced)
     if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
     scrollTimeoutRef.current = setTimeout(() => {
       const scrollMiddle = container.scrollTop + container.clientHeight / 2;
@@ -166,7 +160,7 @@ export default function InfiniteCalendar() {
       });
 
       if (closestMonth) setCurrentMonth(closestMonth);
-    }, 10); // reduce from 100ms to 50ms for faster highlighting
+    }, 10); 
   };
 
   const handleDaySelect = (date: string) => {

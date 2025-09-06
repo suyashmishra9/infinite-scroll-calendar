@@ -13,13 +13,11 @@ function getUUID() {
   });
 }
 
-// Parse US date string (MM/DD/YYYY) to local Date
 export function parseUsDate(str: string) {
   const [m, d, y] = str.split("/").map(Number);
   return new Date(y, m - 1, d); // local date
 }
 
-// Convert Date to YMD string in local time (avoid UTC shift)
 export function toYMD(date: Date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -27,7 +25,6 @@ export function toYMD(date: Date) {
   return `${y}-${m}-${d}`;
 }
 
-// Normalize entries to Map<YMD, Entry[]>
 export function normalizeEntries(entries: Entry[] = []): Map<string, Entry[]> {
   const byDate = new Map<string, Entry[]>();
   for (const entry of entries) {
